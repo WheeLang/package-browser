@@ -1,0 +1,93 @@
+<!-- index.html for browse.wheedev.org -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧵 Whee Packages</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .card {
+      background: white;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+    .card p {
+      font-size: 0.95rem;
+      color: #555;
+    }
+    .install {
+      background: #eef;
+      padding: 0.5rem;
+      font-family: monospace;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧵 Whee Package Browser</h1>
+  <div class="grid" id="packages"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@ltd/j-toml@1.2.3/dist/j-toml.min.js"></script>
+  <script>
+    async function fetchTOML(url) {
+      const res = await fetch(url);
+      const text = await res.text();
+      return TOML.parse(text);
+    }
+
+    async function loadPackages() {
+      const pkgList = await fetch("https://packages.leon8326.org/PackageList.json").then(res => res.json());
+      const container = document.getElementById("packages");
+
+      for (const pkg of pkgList) {
+        const metaURL = `https://packages.leon8326.org/${pkg}/PackageIndex.toml`;
+        const threadURL = `https://packages.leon8326.org/${pkg}/Thread.toml`;
+
+        try {
+          const [meta, thread] = await Promise.all([
+            fetchTOML(metaURL),
+            fetchTOML(threadURL)
+          ]);
+
+          const el = document.createElement("div");
+          el.className = "card";
+          el.innerHTML = `
+            <h2>${meta.browsepage.name}</h2>
+            <p><strong>Maintainer:</strong> ${meta.browsepage.maintainer}</p>
+            <p><strong>Description:</strong> ${meta.browsepage.description}</p>
+            <p><strong>Version:</strong> ${thread.package.version}</p>
+            <div class="install">fox install ${pkg}</div>
+            <p><a href="package/?pkg=${pkg}">View Details</a></p>
+          `;
+          container.appendChild(el);
+        } catch (e) {
+          console.warn("Failed to load:", pkg, e);
+        }
+      }
+    }
+
+    loadPackages();
+  </script>
+</body>
+</html>
