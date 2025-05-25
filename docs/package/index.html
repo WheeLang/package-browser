@@ -67,8 +67,8 @@
     async function load() {
       try {
         const [meta, thread] = await Promise.all([
-          fetchTOML(`https://packages.leon8326.org/${pkg}/PackageIndex.toml`),
-          fetchTOML(`https://packages.leon8326.org/${pkg}/Thread.toml`)
+          fetchTOML(`https://packages.wheedev.org/${pkg}/PackageIndex.toml`),
+          fetchTOML(`https://packages.wheedev.org/${pkg}/Thread.toml`)
         ]);
 
         const metaData = meta[0].browsepage;
