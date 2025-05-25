@@ -57,12 +57,12 @@
     }
 
     async function loadPackages() {
-      const pkgList = await fetch("https://packages.leon8326.org/PackageList.json").then(res => res.json());
+      const pkgList = await fetch("https://packages.wheedev.org/PackageList.json").then(res => res.json());
       const container = document.getElementById("packages");
 
       for (const pkg of pkgList) {
-        const metaURL = `https://packages.leon8326.org/${pkg}/PackageIndex.toml`;
-        const threadURL = `https://packages.leon8326.org/${pkg}/Thread.toml`;
+        const metaURL = `https://packages.wheedev.org/${pkg}/PackageIndex.toml`;
+        const threadURL = `https://packages.wheedev.org/${pkg}/Thread.toml`;
 
         try {
           const [meta, thread] = await Promise.all([
