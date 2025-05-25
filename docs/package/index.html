@@ -1,0 +1,91 @@
+<!-- package/index.html for viewing a specific package from ?pkg=... -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧵 Thread Package View</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      padding: 2rem;
+    }
+    .container {
+      background: white;
+      max-width: 700px;
+      margin: auto;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      margin: 0 0 1rem 0;
+    }
+    pre {
+      background: #eee;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    .back {
+      display: inline-block;
+      margin-bottom: 1rem;
+      text-decoration: none;
+      color: #3366cc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back">← Back to Browse</a>
+    <h1 id="pkgname">Loading...</h1>
+    <h2 id="version"></h2>
+    <p><strong>Maintainer:</strong> <span id="maintainer"></span></p>
+    <p><strong>Description:</strong></p>
+    <p id="description"></p>
+    <h3>Thread.toml</h3>
+    <pre id="tomlview">Loading...</pre>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@ltd/j-toml@1.2.3/dist/j-toml.min.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const pkg = params.get("pkg");
+
+    if (!pkg) {
+      document.body.innerHTML = "<p>❌ No package specified in ?pkg=</p>";
+      throw new Error("Missing package param");
+    }
+
+    async function fetchTOML(url) {
+      const res = await fetch(url);
+      const text = await res.text();
+      return [TOML.parse(text), text];
+    }
+
+    async function load() {
+      try {
+        const [meta, thread] = await Promise.all([
+          fetchTOML(`https://packages.leon8326.org/${pkg}/PackageIndex.toml`),
+          fetchTOML(`https://packages.leon8326.org/${pkg}/Thread.toml`)
+        ]);
+
+        const metaData = meta[0].browsepage;
+        const threadData = thread[0].package;
+        const threadRaw = thread[1];
+
+        document.getElementById("pkgname").textContent = metaData.name;
+        document.getElementById("version").textContent = "Version: " + threadData.version;
+        document.getElementById("maintainer").textContent = metaData.maintainer;
+        document.getElementById("description").textContent = metaData.description;
+        document.getElementById("tomlview").textContent = threadRaw;
+      } catch (e) {
+        document.querySelector(".container").innerHTML = `<p>❌ Failed to load package info: ${e}</p>`;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
