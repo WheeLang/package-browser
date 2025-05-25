@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🧵 Thread Package View</title>
+  <title>🧵 Whee Package View</title>
   <style>
     body {
       font-family: sans-serif;
@@ -48,7 +48,7 @@
     <pre id="tomlview">Loading...</pre>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@iarna/toml@2.2.5/toml.js"></script>
+  <script src=" https://cdn.jsdelivr.net/npm/toml-js@0.0.8/lib/amd/toml.min.js "></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     const pkg = params.get("pkg");
@@ -61,7 +61,7 @@
     async function fetchTOML(url) {
       const res = await fetch(url);
       const text = await res.text();
-      return [TOML.parse(text), text];
+      return [toml.parse(text), text];
     }
 
     async function load() {
