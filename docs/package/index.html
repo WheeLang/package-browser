@@ -48,44 +48,46 @@
     <pre id="tomlview">Loading...</pre>
   </div>
 
-  <script src=" https://cdn.jsdelivr.net/npm/toml-js@0.0.8/lib/amd/toml.min.js "></script>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const pkg = params.get("pkg");
+  
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const pkg = params.get("pkg");
 
-    if (!pkg) {
-      document.body.innerHTML = "<p>❌ No package specified in ?pkg=</p>";
-      throw new Error("Missing package param");
+  if (!pkg) {
+    document.body.innerHTML = "<p>❌ No package specified in ?pkg=</p>";
+    throw new Error("Missing package param");
+  }
+
+  async function fetchJSON(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+    return res.json();
+  }
+
+  async function load() {
+    try {
+      const [meta, thread] = await Promise.all([
+        fetchJSON(`https://packages.wheedev.org/${pkg}/PackageIndex.json`),
+        fetchJSON(`https://packages.wheedev.org/${pkg}/Thread.json`)
+      ]);
+
+      const metaData = meta.browsepage;
+      const threadData = thread.package;
+
+      document.getElementById("pkgname").textContent = metaData.name;
+      document.getElementById("version").textContent = "Version: " + threadData.version;
+      document.getElementById("maintainer").textContent = metaData.maintainer;
+      document.getElementById("description").textContent = metaData.description;
+
+      // Optional: pretty-print full JSON
+      document.getElementById("tomlview").textContent =
+        JSON.stringify({ thread, meta }, null, 2);
+    } catch (e) {
+      document.querySelector(".container").innerHTML = `<p>❌ Failed to load package info: ${e}</p>`;
     }
+  }
 
-    async function fetchTOML(url) {
-      const res = await fetch(url);
-      const text = await res.text();
-      return [toml.parse(text), text];
-    }
-
-    async function load() {
-      try {
-        const [meta, thread] = await Promise.all([
-          fetchTOML(`https://packages.wheedev.org/${pkg}/PackageIndex.toml`),
-          fetchTOML(`https://packages.wheedev.org/${pkg}/Thread.toml`)
-        ]);
-
-        const metaData = meta[0].browsepage;
-        const threadData = thread[0].package;
-        const threadRaw = thread[1];
-
-        document.getElementById("pkgname").textContent = metaData.name;
-        document.getElementById("version").textContent = "Version: " + threadData.version;
-        document.getElementById("maintainer").textContent = metaData.maintainer;
-        document.getElementById("description").textContent = metaData.description;
-        document.getElementById("tomlview").textContent = threadRaw;
-      } catch (e) {
-        document.querySelector(".container").innerHTML = `<p>❌ Failed to load package info: ${e}</p>`;
-      }
-    }
-
-    load();
-  </script>
+  load();
+</script>
 </body>
 </html>
