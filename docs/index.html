@@ -42,6 +42,22 @@
       border-radius: 8px;
       margin-top: 0.5rem;
     }
+    .label {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+    }
+    .label.index {
+      background: #007bff;
+      color: white;
+    }
+    .label.ppa {
+      background: #ff8800;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -54,13 +70,13 @@
     return res.json();
   }
 
-  async function loadPackages() {
-    const pkgList = await fetch("https://packages.wheedev.org/PackageList.json").then(res => res.json());
+  async function loadFrom(source, labelClass, labelText) {
+    const pkgList = await fetch(`${source}/PackageList.json`).then(res => res.json());
     const container = document.getElementById("packages");
 
     for (const pkg of pkgList) {
-      const metaURL = `https://packages.wheedev.org/${pkg}/PackageIndex.json`;
-      const threadURL = `https://packages.wheedev.org/${pkg}/Thread.json`;
+      const metaURL = `${source}/${pkg}/PackageIndex.json`;
+      const threadURL = `${source}/${pkg}/Thread.json`;
 
       try {
         const [meta, thread] = await Promise.all([
@@ -71,6 +87,7 @@
         const el = document.createElement("div");
         el.className = "card";
         el.innerHTML = `
+          <div class="label ${labelClass}">${labelText}</div>
           <h2>${meta.browsepage.name}</h2>
           <p><strong>Maintainer:</strong> ${meta.browsepage.maintainer}</p>
           <p><strong>Description:</strong> ${meta.browsepage.description}</p>
@@ -80,12 +97,13 @@
         `;
         container.appendChild(el);
       } catch (e) {
-        console.warn("❌ Failed to load:", pkg, e);
+        console.warn(`❌ Failed to load ${pkg} from ${source}`, e);
       }
     }
   }
 
-  loadPackages();
+  loadFrom("https://packages.wheedev.org", "index", "Package Index");
+  loadFrom("https://ppa.wheedev.org", "ppa", "PPA");
 </script>
 
 </body>
