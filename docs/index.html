@@ -67,7 +67,15 @@
 <script>
   async function fetchJSON(url) {
     const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
     return res.json();
+  }
+
+  async function fetchYAML(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+    const text = await res.text();
+    return jsyaml.load(text); // requires js-yaml
   }
 
   async function loadFrom(source, labelClass, labelText) {
@@ -75,13 +83,13 @@
     const container = document.getElementById("packages");
 
     for (const pkg of pkgList) {
-      const metaURL = `${source}/${pkg}/PackageIndex.json`;
-      const threadURL = `${source}/${pkg}/Thread.json`;
+      const metaURL = `${source}/${pkg}/Packet.json`;
+      const threadURL = `${source}/${pkg}/Thread.yml`;
 
       try {
         const [meta, thread] = await Promise.all([
           fetchJSON(metaURL),
-          fetchJSON(threadURL)
+          fetchYAML(threadURL)
         ]);
 
         const el = document.createElement("div");
@@ -102,8 +110,14 @@
     }
   }
 
-  loadFrom("https://packages.wheedev.org", "index", "Package Index");
-  loadFrom("https://ppa.wheedev.org", "ppa", "PPA");
+  // Load js-yaml dynamically for parsing Thread.yml
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js';
+  script.onload = () => {
+    loadFrom("https://packages.wheedev.org", "index", "Package Index");
+    loadFrom("https://ppa.wheedev.org", "ppa", "PPA");
+  };
+  document.head.appendChild(script);
 </script>
 
 </body>
