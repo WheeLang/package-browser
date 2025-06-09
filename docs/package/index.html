@@ -35,6 +35,7 @@
       color: #3366cc;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -48,7 +49,6 @@
     <pre id="tomlview">Loading...</pre>
   </div>
 
-  
 <script>
   const params = new URLSearchParams(window.location.search);
   const pkg = params.get("pkg");
@@ -64,24 +64,27 @@
     return res.json();
   }
 
+  async function fetchYAML(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+    const text = await res.text();
+    return jsyaml.load(text);
+  }
+
   async function load() {
     try {
-      const [meta, thread] = await Promise.all([
-        fetchJSON(`https://packages.wheedev.org/${pkg}/PackageIndex.json`),
-        fetchJSON(`https://packages.wheedev.org/${pkg}/Thread.json`)
+      const [packet, thread] = await Promise.all([
+        fetchJSON(`https://packages.wheedev.org/${pkg}/Packet.json`),
+        fetchYAML(`https://packages.wheedev.org/${pkg}/Thread.yml`)
       ]);
 
-      const metaData = meta.browsepage;
-      const threadData = thread.package;
+      document.getElementById("pkgname").textContent = packet.name || "Unnamed Package";
+      document.getElementById("version").textContent = "Version: " + (thread.version || "Unknown");
+      document.getElementById("maintainer").textContent = packet.maintainer || "Unknown";
+      document.getElementById("description").textContent = packet.description || "No description.";
 
-      document.getElementById("pkgname").textContent = metaData.name;
-      document.getElementById("version").textContent = "Version: " + threadData.version;
-      document.getElementById("maintainer").textContent = metaData.maintainer;
-      document.getElementById("description").textContent = metaData.description;
-
-      // Optional: pretty-print full JSON
       document.getElementById("tomlview").textContent =
-        JSON.stringify({ thread, meta }, null, 2);
+        JSON.stringify({ thread, packet }, null, 2);
     } catch (e) {
       document.querySelector(".container").innerHTML = `<p>❌ Failed to load package info: ${e}</p>`;
     }
